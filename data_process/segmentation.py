@@ -11,9 +11,10 @@ class Segmentation(object):
     __STOP_WORDS = set()
     __FILE_ENCODING = 'UTF-8'
 
-    def __new__():
+    def __new__(cls):
         if not Segmentation.__STOP_WORDS:
             Segmentation.__load_stop_words()
+        return object.__new__(cls)
 
     @staticmethod
     def __load_stop_words():
