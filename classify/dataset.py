@@ -5,11 +5,13 @@ import os
 
 
 class DataSet(object):
-    def __init__(self, folders):
+
+    def __init__(self, folders=None):
         self.data_list = []
         self.label = []
-        for folder_name in folders:
-            self.__read_data(folder_name)
+        if folders:
+            for folder_name in folders:
+                self.__read_data(folder_name)
 
     def __read_data(self, folder_name):
         data_dir = os.listdir(folder_name)
