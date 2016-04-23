@@ -22,17 +22,26 @@ class DFSelector(FeatureSelector):
     def __init__(self):
         pass
 
-    # num -- choose num of tokens
-    def select(self, data_set, num=5000):
-        new_set = DataSet()
-        new_set.label = data_set.label
+    def get_val(self, data_set):
         df_list = []
         for data in data_set.data_list:
             tokens = set([_ for _ in data.split()])
             df_list.extend(list(tokens))
         df_series = pd.Series(df_list)
         ret = df_series.value_counts()
-        vocabulary = set(ret[0:min(len(ret), num)].index)
+        result = dict()
+        for _, __ in ret.iteritems():
+            result[_] = __
+        return result
+
+    # num -- choose num of tokens
+    def select(self, data_set, num=5000):
+        new_set = DataSet()
+        new_set.label = data_set.label
+        _DF_Series = self.get_val(data_set)
+        _DF_Series = pd.Series(_DF_Series)
+        _DF_Series.sort_values(ascending=False, inplace=True)
+        vocabulary = set(_DF_Series[0:min(num, len(_DF_Series))].index)
         for data in data_set.data_list:
             tokens = [_ for _ in data.split() if _ in vocabulary]
             new_set.data_list.append(" ".join(tokens))
@@ -43,10 +52,8 @@ class IGSelector(FeatureSelector):
     def __init__(self):
         pass
 
-    def select(self, data_set, num=5000):
+    def get_val(self, data_set):
         sample_len = len(data_set.data_list)
-        new_set = DataSet()
-        new_set.label = data_set.label
         class_mp = defaultdict()
         _K = 0
         for _ in data_set.label:
@@ -78,6 +85,12 @@ class IGSelector(FeatureSelector):
                     _IG_Series[key] += p1 * value + (1.0 - p1) * value_bar
                 else:
                     _IG_Series[key] = p1 * value + (1.0 - p1) * value_bar
+        return _IG_Series
+
+    def select(self, data_set, num=5000):
+        new_set = DataSet()
+        new_set.label = data_set.label
+        _IG_Series = self.get_val(data_set)
         _IG_Series = pd.Series(_IG_Series)
         _IG_Series.sort_values(ascending=False, inplace=True)
         vocabulary = set(_IG_Series[0:min(num, len(_IG_Series))].index)
@@ -91,10 +104,8 @@ class MISelector(FeatureSelector):
     def __init__(self):
         pass
 
-    def select(self, data_set, type='max', num=5000):
+    def get_val(self, data_set, type='max'):
         sample_len = len(data_set.data_list)
-        new_set = DataSet()
-        new_set.label = data_set.label
         class_mp = defaultdict()
         _K = 0
         for _ in data_set.label:
@@ -118,7 +129,7 @@ class MISelector(FeatureSelector):
                 token_num = 0
                 for _j in xrange(_K):
                     token_num += p_dict[_j][key]
-                p2 = float(token_num) / sample_len
+                p2 = float(class_num[_i]) / sample_len
                 # print p1, p2
                 value = math.log(p1 / p2)
                 if key in _MI_Series:
@@ -131,6 +142,13 @@ class MISelector(FeatureSelector):
                         _MI_Series[key] = value
                     elif type == 'avg':
                         _MI_Series[key] = float(class_num[_i]) / sample_len * value
+        return _MI_Series
+
+
+    def select(self, data_set, type='max', num=5000):
+        new_set = DataSet()
+        new_set.label = data_set.label
+        _MI_Series = self.get_val(data_set, type=type)
         _MI_Series = pd.Series(_MI_Series)
         _MI_Series.sort_values(ascending=False, inplace=True)
         vocabulary = set(_MI_Series[0:min(num, len(_MI_Series))].index)
@@ -144,10 +162,8 @@ class CHISelector(FeatureSelector):
     def __init__(self):
         pass
 
-    def select(self, data_set, num=5000):
+    def get_val(self, data_set):
         sample_len = len(data_set.data_list)
-        new_set = DataSet()
-        new_set.label = data_set.label
         class_mp = defaultdict()
         _K = 0
         for _ in data_set.label:
@@ -179,6 +195,12 @@ class CHISelector(FeatureSelector):
                     _CHI_Series[key] = max(_CHI_Series[key], value)
                 else:
                     _CHI_Series[key] = value
+        return _CHI_Series
+
+    def select(self, data_set, num=5000):
+        new_set = DataSet()
+        new_set.label = data_set.label
+        _CHI_Series = self.get_val(data_set)
         _CHI_Series = pd.Series(_CHI_Series)
         _CHI_Series.sort_values(ascending=False, inplace=True)
         vocabulary = set(_CHI_Series[0:min(num, len(_CHI_Series))].index)
@@ -192,10 +214,8 @@ class BNSSelector(FeatureSelector):
     def __init__(self):
         pass
 
-    def select(self, data_set, num=5000):
+    def get_val(self, data_set):
         sample_len = len(data_set.data_list)
-        new_set = DataSet()
-        new_set.label = data_set.label
         class_mp = defaultdict()
         _K = 0
         for _ in data_set.label:
@@ -218,11 +238,17 @@ class BNSSelector(FeatureSelector):
                     continue
                 p2 = float(value) / (sample_len - class_num[_i])
                 # print p1, p2
-                value = math.fabs(norm.ppf(p1) - norm.ppf(p2)) # 逆正态分布函数,有点慢
+                value = math.fabs(norm.ppf(p1) - norm.ppf(p2))  # 逆正态分布函数,有点慢
                 if key in _BNS_Series:
                     _BNS_Series[key] = max(_BNS_Series[key], value)
                 else:
                     _BNS_Series[key] = value
+        return _BNS_Series
+
+    def select(self, data_set, num=5000):
+        new_set = DataSet()
+        new_set.label = data_set.label
+        _BNS_Series = self.get_val(data_set)
         _BNS_Series = pd.Series(_BNS_Series)
         _BNS_Series.sort_values(ascending=False, inplace=True)
         vocabulary = set(_BNS_Series[0:min(num, len(_BNS_Series))].index)
@@ -236,10 +262,8 @@ class WLLRSelector(FeatureSelector):
     def __init__(self):
         pass
 
-    def select(self, data_set, num=5000):
+    def get_val(self, data_set):
         sample_len = len(data_set.data_list)
-        new_set = DataSet()
-        new_set.label = data_set.label
         class_mp = defaultdict()
         _K = 0
         for _ in data_set.label:
@@ -267,9 +291,53 @@ class WLLRSelector(FeatureSelector):
                     _WLLR_Series[key] = max(_WLLR_Series[key], value)
                 else:
                     _WLLR_Series[key] = value
+        return _WLLR_Series
+
+    def select(self, data_set, num=5000):
+        new_set = DataSet()
+        new_set.label = data_set.label
+        _WLLR_Series = self.get_val(data_set)
         _WLLR_Series = pd.Series(_WLLR_Series)
         _WLLR_Series.sort_values(ascending=False, inplace=True)
         vocabulary = set(_WLLR_Series[0:min(num, len(_WLLR_Series))].index)
+        for data in data_set.data_list:
+            tokens = [_ for _ in data.split() if _ in vocabulary]
+            new_set.data_list.append(" ".join(tokens))
+        return new_set
+
+
+class AllSelector(FeatureSelector):
+    def __init__(self):
+        pass
+
+    def normal(self, series):
+        mx = -100000000000000.0
+        mi = -100000000000000.0
+        for key, val in series.iteritems():
+            mx = max(mx, val)
+            mi = min(mi, val)
+        for key in series.keys():
+            pre = series[key]
+            now = (mx - pre) / (mx - mi)
+            series[pre] = now
+        return series
+
+    def select(self, data_set, num=5000):
+        new_set = DataSet()
+        new_set.label = data_set.label
+        _ALL_Series = dict()
+        _SELECTORS = [DFSelector, IGSelector, MISelector, CHISelector, BNSSelector, WLLRSelector]
+        for selector in _SELECTORS:
+            selector = selector()
+            _Series = self.normal(selector.get_val(data_set))
+            for key, val in _Series.iteritems():
+                if key in _ALL_Series:
+                    _ALL_Series[key] = max(_ALL_Series[key], val)
+                else:
+                    _ALL_Series[key] = val
+        _ALL_Series = pd.Series(_ALL_Series)
+        _ALL_Series.sort_values(ascending=False, inplace=True)
+        vocabulary = set(_ALL_Series[0:min(num, len(_ALL_Series))].index)
         for data in data_set.data_list:
             tokens = [_ for _ in data.split() if _ in vocabulary]
             new_set.data_list.append(" ".join(tokens))

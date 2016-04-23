@@ -4,4 +4,4 @@
 from feature_selection import *
 
 FEATURE_SELECTORS = {'df': DFSelector, 'mi': MISelector, 'ig': IGSelector, 'wllr': WLLRSelector, 'chi': CHISelector,
-                     'bns': BNSSelector}
+                     'bns': BNSSelector, 'all': AllSelector}

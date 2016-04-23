@@ -3,8 +3,9 @@
 
 from dataset import DataSet
 from sklearn.svm import LinearSVC
+from sklearn.ensemble import RandomForestClassifier,GradientBoostingClassifier
 from sklearn.svm import SVC
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 import numpy as np
 
 
@@ -16,13 +17,14 @@ class Classifier(object):
 
     def train(self):
         self.fit_vectorizer = TfidfVectorizer()
+        # self.fit_vectorizer = CountVectorizer()
         self.train_feature = self.fit_vectorizer.fit_transform(self.train_data.data_list)
         pass
 
     def predict(self):
         self.test_feature = self.fit_vectorizer.transform(self.test_data.data_list)
         clf = LinearSVC(C=1, loss='hinge')
-        clf.fit(self.train_feature, np.array(self.train_data.label))
+        clf.fit(self.train_feature.toarray(), np.array(self.train_data.label))
         pred = clf.predict(self.test_feature)
 
         right = 0

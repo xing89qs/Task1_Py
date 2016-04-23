@@ -5,7 +5,7 @@ from classify import *
 import numpy as np
 from feature import *
 import sys
-
+import matplotlib as plot
 
 def run(feature_selection=None, num=5000):
     _K = 5
@@ -26,8 +26,8 @@ def run(feature_selection=None, num=5000):
         classifier = Classifier(train_data, test_data)
         classifier.train()
         precision[_k] = classifier.predict()
-        print precision[_k]
     print np.mean(precision)
+    return np.mean(precision)
 
 
 if __name__ == '__main__':
@@ -35,9 +35,17 @@ if __name__ == '__main__':
     # run()
 
     # Feature Selection
-    # run(feature_selection='df')
-    # run(feature_selection='mi')
-    # run(feature_selection='ig')
-    # run(feature_selection='wllr')
-    # run(feature_selection='chi')
+
+
+    _NUMS = range(1000,  10000, 1000)
+
+    '''
+    run(feature_selection='df')
+    run(feature_selection='mi')
+    run(feature_selection='ig')
+    run(feature_selection='wllr')
+    run(feature_selection='chi')
     run(feature_selection='bns')
+    '''
+
+    run(feature_selection='all')
